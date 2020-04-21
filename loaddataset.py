@@ -22,8 +22,6 @@ def get_labelspace_size():
 def one_hot(in_label):
     output = torch.zeros([1, get_labelspace_size()])
     output[0][in_label] = 1
-    # output = torch.zeros(get_labelspace_size())
-    # output[in_label] = 1
     return output
 
 
@@ -78,7 +76,6 @@ class DomainData(Dataset):
         if imghdr.what(self.data[index]) != 'jpeg':
             print(self.data[index])
             print(imghdr.what(self.data[index]))
-        # image = ToTensor()(temp_image).unsqueeze(0)
         if self.transform is not None:
             return self.transform(image), self.labels[index]
         return image, self.labels[index]
