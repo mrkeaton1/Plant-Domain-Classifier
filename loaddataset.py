@@ -18,13 +18,6 @@ def get_labelspace_size():
     return len(categories)
 
 
-# Assumes input is less than the size of the label space
-def one_hot(in_label):
-    output = torch.zeros([1, get_labelspace_size()])
-    output[0][in_label] = 1
-    return output
-
-
 def randomize(data, labels):
     size = len(data)
     new_data = []
