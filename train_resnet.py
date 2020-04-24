@@ -17,15 +17,16 @@ from torchvision.models.resnet import resnet18
 from time import time
 import matplotlib.pyplot as plt
 
-train_batch_size = 128
-test_batch_size = 128
-train_percent = 0.7
+train_percent = 0.8
 
 data_dir = sys.argv[1]
 pretrained = bool(sys.argv[2])
-n_epochs = int(sys.argv[3])
-learning_rate = float(sys.argv[4])
-momentum = float(sys.argv[5])
+train_batch_size = int(sys.argv[3])
+test_batch_size = int(sys.argv[4])
+n_epochs = int(sys.argv[5])
+learning_rate = float(sys.argv[6])
+momentum = float(sys.argv[7])
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # ?
 # cudnn.benchmark = True
