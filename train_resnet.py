@@ -38,9 +38,9 @@ partition = pickle.load(open(os.path.join(data_dir, 'partition_dict.p'), 'rb'))
 labels = pickle.load(open(os.path.join(data_dir, 'label_list.p'), 'rb'))
 
 training_dataset = DomainData(partition['train'], labels, data_dir, transform=base_transform)
-training_generator = DataLoader(training_dataset, batch_size=train_batch_size, shuffle=True, num_workers=8)
+training_generator = DataLoader(training_dataset, batch_size=train_batch_size, shuffle=True)
 test_dataset = DomainData(partition['test'], labels, data_dir, transform=base_transform)
-test_generator = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=True, num_workers=8)
+test_generator = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=True)
 
 train_dom_count = np.zeros(3, dtype='int')
 for i in range(len(training_dataset)):
@@ -64,6 +64,7 @@ else:
     resnet18_base = resnet18(pretrained=False)
 
 resnet18_base.fc = torch.nn.Linear(512, get_labelspace_size())
+resnet18_base = torch.nn.DataParallel(resnet18_base)
 resnet18_base.to(device)
 ce_loss = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(resnet18_base.parameters(), lr=learning_rate, momentum=momentum)
