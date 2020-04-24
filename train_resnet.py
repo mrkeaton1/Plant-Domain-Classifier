@@ -17,19 +17,15 @@ from torchvision.models.resnet import resnet18
 from time import time
 import matplotlib.pyplot as plt
 
-data_dir = '/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset'
 train_batch_size = 128
 test_batch_size = 128
 train_percent = 0.7
 
-# pretrained = True
-# n_epochs = 5
-# learning_rate = 0.05
-# momentum = 0.5
-pretrained = bool(sys.argv[1])
-n_epochs = int(sys.argv[2])
-learning_rate = float(sys.argv[3])
-momentum = float(sys.argv[4])
+data_dir = sys.argv[1]
+pretrained = bool(sys.argv[2])
+n_epochs = int(sys.argv[3])
+learning_rate = float(sys.argv[4])
+momentum = float(sys.argv[5])
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # ?
 # cudnn.benchmark = True
@@ -143,7 +139,7 @@ plt.xlabel('Number of training examples seen by model')
 plt.ylabel('Cross entropy loss')
 fig1.show()
 pt = 'pretrained' if pretrained else 'untrained'
-fig1.savefig('/home/mrkeaton/Documents/Plant_Code/Domain Classifier/Results/init_results_{}_lr={}_mom={}_losses.png'
+fig1.savefig('Results/init_results_{}_lr={}_mom={}_losses.png'
              .format(pt, learning_rate, momentum))
 
 fig2 = plt.figure()
@@ -155,5 +151,5 @@ plt.title('Accuracy across each epoch')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 fig2.show()
-fig2.savefig('/home/mrkeaton/Documents/Plant_Code/Domain Classifier/Results/init_results_{}_lr={}_mom={}_accuracy.png'
+fig2.savefig('Results/init_results_{}_lr={}_mom={}_accuracy.png'
              .format(pt, learning_rate, momentum))
