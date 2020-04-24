@@ -1,0 +1,2 @@
+python3 train_resnet.py "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset" True 128 128 1 0.02 0.5
+

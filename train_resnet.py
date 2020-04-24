@@ -17,7 +17,7 @@ from torchvision.models.resnet import resnet18
 from time import time
 import matplotlib.pyplot as plt
 
-train_percent = 0.8
+# train_percent = 0.8
 
 data_dir = sys.argv[1]
 pretrained = bool(sys.argv[2])
@@ -95,12 +95,12 @@ for e in range(1, n_epochs + 1):
             train_counter.append(train_counter[-1] + len(train_predictions))
         for i in range(len(train_predictions)):
             train_corrects += (train_predictions[i].item() == batch_labels[i].item())
-        print('Train Epoch: {}/{}; Batch: {}/{}   Time elapsed: {}'
-              .format(e, n_epochs, batch_idx + 1, ceil(len(training_dataset) / train_batch_size),
-                      (elapsed_time(time() - start_train))))
         current_epoch_tc = train_counter[-1]-((e-1)*len(training_dataset))
         running_train_accuracy = float(train_corrects / current_epoch_tc * 100)
-        print('Accuracy: {}/{} ({:.2f}%)'.format(train_corrects, current_epoch_tc, running_train_accuracy))
+        print('Train Epoch: {}/{}; Batch: {}/{} Accuracy: {}/{} ({:.2f}%)   Time elapsed: {}'
+              .format(e, n_epochs, batch_idx + 1, ceil(len(training_dataset) / train_batch_size),
+                      train_corrects, current_epoch_tc, running_train_accuracy,
+                      (elapsed_time(time() - start_train))))
     train_accuracy = float(train_corrects / len(training_dataset) * 100)
     train_accs.append(train_accuracy)
     print('\nTotal overall time: {}'.format(elapsed_time(time() - start_time)))
@@ -146,7 +146,8 @@ fig1.savefig('Results/init_results_{}_lr={}_mom={}_losses.png'
 fig2 = plt.figure()
 plt.plot(range(1, n_epochs+1), train_accs, color='blue')
 plt.plot(range(1, n_epochs+1), test_accs, color='red')
-plt.ylim(0,100)
+plt.xlim(0.75, n_epochs+0.25)  # Assumes n_epochs > 1
+plt.ylim(0, 100)
 plt.legend(['Train Accuracy', 'Test Accuracy'], loc='upper right')
 plt.title('Accuracy across each epoch')
 plt.xlabel('Epoch')
