@@ -82,7 +82,7 @@ for e in range(1, n_epochs + 1):
     train_corrects = 0
     for batch_idx, batch_info in enumerate(training_generator):
         batch_data, batch_labels = batch_info[0].to(device), batch_info[1].to(device)
-        ce_loss.zero_grad()
+        optimizer.zero_grad()
         output = resnet18_base(batch_data)
         train_predictions = torch.argmax(output, 1)
         loss = ce_loss(output, batch_labels)
