@@ -15,16 +15,25 @@ categories = ['leaves', 'branches', 'trees']
 
 def generate_tensor_data(data_path):
 
+    # First remove all .pt files, in case .jpg files have been added, moved, or removed
+    print('Clearing current .pt files:')
+    os.chdir(data_path)
+    for species_dir in os.listdir():
+        if os.path.isdir(species_dir):
+            for domain in categories:
+                for file in os.listdir(os.path.join(species_dir, domain)):
+                    if file.endswith('.pt'):
+                        os.remove(os.path.join(data_path, species_dir, domain, file))
+
     data_ids = []
     labels = {}
-    os.chdir(data_path)
 
     count = 1
+    print('Generating tensor data:')
     for species_dir in os.listdir():
-        print(str(count) + ": " + species_dir)
-        count += 1
-
         if os.path.isdir(species_dir):
+            print(str(count) + ": " + species_dir)
+            count += 1
             for domain in categories:
                 for im in os.listdir(os.path.join(species_dir, domain)):
                     if im.endswith('.jpg'):
