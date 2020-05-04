@@ -41,3 +41,6 @@ class DomainData(Dataset):
         X = torch.load(os.path.join(self.data_dir, data_id))
         y = self.labels[data_id]
         return X, y
+
+    def get_sample_jpg_id(self, index):
+        return self.list_ids[index][:-3] + '.jpg'

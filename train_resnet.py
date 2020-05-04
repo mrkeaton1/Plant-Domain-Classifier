@@ -17,13 +17,17 @@ from torchvision.models.resnet import resnet18
 from time import time
 import matplotlib.pyplot as plt
 
-data_dir = sys.argv[1]
-pretrained = bool(sys.argv[2])
-train_batch_size = int(sys.argv[3])
-test_batch_size = int(sys.argv[4])
-n_epochs = int(sys.argv[5])
-learning_rate = float(sys.argv[6])
-momentum = float(sys.argv[7])
+# data_dir = sys.argv[1]
+# pretrained = bool(sys.argv[2])
+# train_batch_size = int(sys.argv[3])
+# test_batch_size = int(sys.argv[4])
+# n_epochs = int(sys.argv[5])
+# learning_rate = float(sys.argv[6])
+# momentum = float(sys.argv[7])
+data_dir = "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset"
+pretrained = True
+train_batch_size, test_batch_size = 128, 128
+n_epochs, learning_rate, momentum = 5, 0.02, 0.5
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.backends.cudnn.benchmark = True
@@ -70,9 +74,10 @@ test_counter = [i * len(training_dataset) for i in range(1, n_epochs + 1)]
 test_losses = []
 test_accs = []
 start_time = time()
+train_misses = {}
+test_misses = {}
 
 for e in range(1, n_epochs + 1):
-
     print('\nTraining...')
     resnet18_base.train()
     start_train = time()
@@ -98,12 +103,19 @@ for e in range(1, n_epochs + 1):
               .format(e, n_epochs, batch_idx + 1, ceil(len(training_dataset) / train_batch_size),
                       train_corrects, current_epoch_tc, running_train_accuracy,
                       (elapsed_time(time() - start_train))))
+        for i in range(len(train_predictions)):
+            if train_predictions[i].item() != batch_labels[i].item():
+                im_id = training_dataset.get_sample_jpg_id(batch_idx * train_batch_size + i)
+                if train_misses.get(im_id, None) is None:
+                    train_misses[im_id] = [e]
+                else:
+                    train_misses[im_id].append(e)
     train_accuracy = float(train_corrects / len(training_dataset) * 100)
     train_accs.append(train_accuracy)
     print('\nTotal overall time: {}'.format(elapsed_time(time() - start_time)))
 
-
     print('\nTesting...')
+    missed_test = {}
     test_avg_loss = 0.0
     test_corrects = 0
     start_test = time()
@@ -120,6 +132,13 @@ for e in range(1, n_epochs + 1):
             print('Epoch {} - Test Batch: {}/{}   Time elapsed: {}'
                   .format(e, batch_idx + 1, ceil(len(test_dataset) / test_batch_size),
                           (elapsed_time(time() - start_test, short=True))))
+            for i in range(len(test_predictions)):
+                if test_predictions[i].item() != batch_labels[i].item():
+                    im_id = test_dataset.get_sample_jpg_id(batch_idx * test_batch_size + i)
+                    if test_misses.get(im_id, None) is None:
+                        test_misses[im_id] = [e]
+                    else:
+                        test_misses[im_id].append(e)
         test_losses.append(test_avg_loss)
         test_accuracy = float(test_corrects / len(test_dataset) * 100)
         test_accs.append(test_accuracy)
@@ -139,10 +158,10 @@ pt = 'pretrained' if pretrained else 'untrained'
 fig1.savefig('Results/init_results_{}_lr={}_mom={}_losses.png'
              .format(pt, learning_rate, momentum))
 
-fig2 = plt.figure()
+fig2 = plt.figure()  # Code assumes n_epochs > 1
 plt.plot(range(1, n_epochs+1), train_accs, color='blue')
 plt.plot(range(1, n_epochs+1), test_accs, color='red')
-plt.xlim(0.75, n_epochs+0.25)  # Assumes n_epochs > 1
+plt.xlim(0.75, n_epochs+0.25)
 plt.ylim(0, 100)
 plt.legend(['Train Accuracy', 'Test Accuracy'], loc='upper right')
 plt.title('Accuracy across each epoch')
