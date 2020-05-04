@@ -17,8 +17,6 @@ from torchvision.models.resnet import resnet18
 from time import time
 import matplotlib.pyplot as plt
 
-# train_percent = 0.8
-
 data_dir = sys.argv[1]
 pretrained = bool(sys.argv[2])
 train_batch_size = int(sys.argv[3])
@@ -28,8 +26,7 @@ learning_rate = float(sys.argv[6])
 momentum = float(sys.argv[7])
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# ?
-# cudnn.benchmark = True
+torch.backends.cudnn.benchmark = True
 
 partition = pickle.load(open(os.path.join(data_dir, 'partition_dict.p'), 'rb'))
 labels = pickle.load(open(os.path.join(data_dir, 'label_list.p'), 'rb'))
@@ -138,7 +135,6 @@ plt.legend(['Train Loss', 'Test Loss'], loc='upper right')
 plt.title('Training and testing losses')
 plt.xlabel('Number of training examples seen by model')
 plt.ylabel('Cross entropy loss')
-fig1.show()
 pt = 'pretrained' if pretrained else 'untrained'
 fig1.savefig('Results/init_results_{}_lr={}_mom={}_losses.png'
              .format(pt, learning_rate, momentum))
@@ -152,6 +148,5 @@ plt.legend(['Train Accuracy', 'Test Accuracy'], loc='upper right')
 plt.title('Accuracy across each epoch')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
-fig2.show()
 fig2.savefig('Results/init_results_{}_lr={}_mom={}_accuracy.png'
              .format(pt, learning_rate, momentum))
