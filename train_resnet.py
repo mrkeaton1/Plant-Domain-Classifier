@@ -3,13 +3,12 @@ Trains resnet-18 model on iNaturalist dataset domains
 Created by Matthew Keaton on 4/14/2020
 """
 
-from loaddataset import get_labelspace_size, DomainData
-from utils import elapsed_time
+from loaddataset import get_labelspace_size, DomainData, categories
+from utils import elapsed_time, create_confusion_matrix
 from preprocessing import base_transform
 import pickle
 import sys
 import os
-from math import ceil
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -24,7 +23,7 @@ import matplotlib.pyplot as plt
 # n_epochs = int(sys.argv[5])
 # learning_rate = float(sys.argv[6])
 # momentum = float(sys.argv[7])
-data_dir = "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset"
+data_dir = "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)"
 pretrained = True
 train_batch_size, test_batch_size = 128, 128
 n_epochs, learning_rate, momentum = 5, 0.02, 0.5
@@ -32,6 +31,7 @@ n_epochs, learning_rate, momentum = 5, 0.02, 0.5
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.backends.cudnn.benchmark = True
 
+pt = 'pretrained' if pretrained else 'untrained'
 partition = pickle.load(open(os.path.join(data_dir, 'partition_dict.p'), 'rb'))
 labels = pickle.load(open(os.path.join(data_dir, 'label_list.p'), 'rb'))
 
@@ -77,8 +77,12 @@ start_time = time()
 train_misses = {}
 test_misses = {}
 
+confusion_basic_mats = []
+confusion_norm_mats = []
+
 for e in range(1, n_epochs + 1):
-    print('\nTraining...')
+    print('Epoch {}/{}'.format(e, n_epochs))
+    print('Training...')
     resnet18_base.train()
     start_train = time()
     train_corrects = 0
@@ -99,10 +103,6 @@ for e in range(1, n_epochs + 1):
             train_corrects += (train_predictions[i].item() == batch_labels[i].item())
         current_epoch_tc = train_counter[-1]-((e-1)*len(training_dataset))
         running_train_accuracy = float(train_corrects / current_epoch_tc * 100)
-        print('Train Epoch: {}/{}; Batch: {}/{} Accuracy: {}/{} ({:.2f}%)   Time elapsed: {}'
-              .format(e, n_epochs, batch_idx + 1, ceil(len(training_dataset) / train_batch_size),
-                      train_corrects, current_epoch_tc, running_train_accuracy,
-                      (elapsed_time(time() - start_train))))
         for i in range(len(train_predictions)):
             if train_predictions[i].item() != batch_labels[i].item():
                 im_id = training_dataset.get_sample_jpg_id(batch_idx * train_batch_size + i)
@@ -112,49 +112,61 @@ for e in range(1, n_epochs + 1):
                     train_misses[im_id].append(e)
     train_accuracy = float(train_corrects / len(training_dataset) * 100)
     train_accs.append(train_accuracy)
-    print('\nTotal overall time: {}'.format(elapsed_time(time() - start_time)))
+    print('Accuracy: {}/{} ({:.2f}%)   Time elapsed: {}'
+          .format(train_corrects, current_epoch_tc, running_train_accuracy,
+                  (elapsed_time(time() - start_train))))
 
-    print('\nTesting...')
-    missed_test = {}
+    print('Testing...')
     test_avg_loss = 0.0
     test_corrects = 0
+    test_labels = []  # Used for confusion matrix
+    test_predictions = []  # Used for confusion matrix
     start_test = time()
     resnet18_base.eval()
     with torch.no_grad():
         for batch_idx, batch_info in enumerate(test_generator):
             batch_data, batch_labels = batch_info[0].to(device), batch_info[1].to(device)
             output = resnet18_base(batch_data)
-            test_predictions = torch.argmax(output, 1)
+            batch_predictions = torch.argmax(output, 1)
             loss = ce_loss(output, batch_labels)
-            test_avg_loss += (loss.item() * len(test_predictions) / len(test_dataset))
-            for i in range(len(test_predictions)):
-                test_corrects += (test_predictions[i].item() == batch_labels[i].item())
-            print('Epoch {} - Test Batch: {}/{}   Time elapsed: {}'
-                  .format(e, batch_idx + 1, ceil(len(test_dataset) / test_batch_size),
-                          (elapsed_time(time() - start_test, short=True))))
-            for i in range(len(test_predictions)):
-                if test_predictions[i].item() != batch_labels[i].item():
+            test_avg_loss += (loss.item() * len(batch_predictions) / len(test_dataset))
+            for i in range(len(batch_predictions)):
+                test_corrects += (batch_predictions[i].item() == batch_labels[i].item())
+            for i in range(len(batch_predictions)):
+                if batch_predictions[i].item() != batch_labels[i].item():
                     im_id = test_dataset.get_sample_jpg_id(batch_idx * test_batch_size + i)
                     if test_misses.get(im_id, None) is None:
                         test_misses[im_id] = [e]
                     else:
                         test_misses[im_id].append(e)
+            test_labels += batch_labels.tolist()
+            test_predictions += batch_predictions.tolist()
+
+        cmfig1 = plt.figure()
+        pivot1, heatmap1 = create_confusion_matrix(test_labels, test_predictions, categories)
+        cmfig1.savefig('Results/init_results_{}_epoch_{}_lr={}_mom={}_confusion_matrix_basic.png'
+                       .format(pt, e, learning_rate, momentum))
+        cmfig2 = plt.figure()
+        pivot2, heatmap2 = create_confusion_matrix(test_labels, test_predictions, categories, normalize=True)
+        cmfig2.savefig('Results/init_results_{}_epoch_{}_lr={}_mom={}_confusion_matrix_normalized.png'
+                       .format(pt, e, learning_rate, momentum))
+
         test_losses.append(test_avg_loss)
         test_accuracy = float(test_corrects / len(test_dataset) * 100)
         test_accs.append(test_accuracy)
-        print('Test set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)'.format(
+        print('Avg. loss: {:.3f}, Accuracy: {}/{} ({:.2f}%)'.format(
             test_avg_loss, test_corrects, len(test_dataset), test_accuracy))
-        print('Total test time: {}'.format(elapsed_time(time() - start_test)))
-    print('\nTotal overall time: {}'.format(elapsed_time(time() - start_time)))
+        print('Test time: {}'.format(elapsed_time(time() - start_test)))
+        print('Train/test time: {}'.format(elapsed_time(time() - start_train)))
+    print('Total overall time: {}\n'.format(elapsed_time(time() - start_time)))
 
 fig1 = plt.figure()
 plt.plot(train_counter, train_losses, color='blue')
 plt.scatter(test_counter, test_losses, color='red')
 plt.legend(['Train Loss', 'Test Loss'], loc='upper right')
-plt.title('Training and testing losses')
+plt.title('Training and Testing Losses')
 plt.xlabel('Number of training examples seen by model')
 plt.ylabel('Cross entropy loss')
-pt = 'pretrained' if pretrained else 'untrained'
 fig1.savefig('Results/init_results_{}_lr={}_mom={}_losses.png'
              .format(pt, learning_rate, momentum))
 
@@ -164,8 +176,16 @@ plt.plot(range(1, n_epochs+1), test_accs, color='red')
 plt.xlim(0.75, n_epochs+0.25)
 plt.ylim(0, 100)
 plt.legend(['Train Accuracy', 'Test Accuracy'], loc='upper right')
-plt.title('Accuracy across each epoch')
+plt.title('Accuracy Across Each Epoch')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 fig2.savefig('Results/init_results_{}_lr={}_mom={}_accuracy.png'
              .format(pt, learning_rate, momentum))
+
+# Used in python console for analysis of missed predictions in final epoch
+miss_5 = []
+for key in test_misses.keys():
+    temp = set(test_misses[key])
+    if n_epochs in temp:
+        miss_5.append(key)
+miss_5.sort()

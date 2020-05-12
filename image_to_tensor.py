@@ -9,6 +9,8 @@ import random
 from PIL import Image
 from torchvision.transforms import ToTensor
 import pickle
+from time import time
+from utils import elapsed_time
 
 categories = ['leaves', 'branches', 'trees']
 
@@ -61,8 +63,10 @@ def generate_partition_data(data_ids, train_ratio):
 
 
 if __name__ == '__main__':
-    data_dir = '/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset'
+    start = time()
+    data_dir = '/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)'
     d_ids = generate_tensor_data(data_dir)
     generate_partition_data(d_ids, 0.8)
+    print('Elapsed time: {}'.format(elapsed_time((time() - start))))
     # partition = pickle.load(open(os.path.join(data_dir, 'partition_dict.p'), 'rb'))
     # labels = pickle.load(open(os.path.join(data_dir, 'label_list.p'), 'rb'))

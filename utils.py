@@ -3,6 +3,12 @@ Utility code for miscellaneous tasks
 Created by Matthew Keaton on 4/16/2020
 """
 
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+import seaborn as sns; sns.set()
+
 
 def elapsed_time(seconds, short=False):
     if not short:
@@ -49,3 +55,28 @@ def elapsed_time(seconds, short=False):
         else:
             e_time += '{:.1f}s'.format(seconds)
         return e_time
+
+
+def create_confusion_matrix(y_true, y_pred, classes, normalize=False):
+    # Get data into confusion matrix (array)
+    num_classes = len(classes)
+    size = len(y_true)
+    cols = ['True Values', 'Predicted Values', 'values']
+    conf_mat = np.zeros((num_classes, num_classes))
+    for i in range(size):
+        conf_mat[y_true[i], y_pred[i]] += 1
+
+    conf_frame = pd.DataFrame([], columns=cols)
+    for i in range(num_classes):
+        for j in range(num_classes):
+            new_row = pd.DataFrame([[classes[i], classes[j], conf_mat[i][j]]], columns=cols)
+            conf_frame = conf_frame.append(new_row)
+    conf_pivot = conf_frame.pivot(index=cols[0], columns=cols[1], values=cols[2])
+    conf_pivot = conf_pivot.reindex(classes)
+    conf_pivot = conf_pivot.reindex(columns=classes)
+
+    if normalize:
+        conf_pivot = conf_pivot / size * 100
+        return conf_pivot, sns.heatmap(conf_pivot, annot=True, cmap="BuGn", fmt='.2f', cbar=False)
+    else:
+        return conf_pivot, sns.heatmap(conf_pivot, annot=True, cmap="BuGn", fmt='g', cbar=False)
