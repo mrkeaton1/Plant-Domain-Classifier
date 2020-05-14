@@ -16,17 +16,17 @@ from torchvision.models.resnet import resnet18
 from time import time
 import matplotlib.pyplot as plt
 
-# data_dir = sys.argv[1]
-# pretrained = bool(sys.argv[2])
-# train_batch_size = int(sys.argv[3])
-# test_batch_size = int(sys.argv[4])
-# n_epochs = int(sys.argv[5])
-# learning_rate = float(sys.argv[6])
-# momentum = float(sys.argv[7])
-data_dir = "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)"
-pretrained = True
-train_batch_size, test_batch_size = 128, 128
-n_epochs, learning_rate, momentum = 5, 0.02, 0.5
+data_dir = sys.argv[1]
+pretrained = bool(sys.argv[2])
+train_batch_size = int(sys.argv[3])
+test_batch_size = int(sys.argv[4])
+n_epochs = int(sys.argv[5])
+learning_rate = float(sys.argv[6])
+momentum = float(sys.argv[7])
+# data_dir = "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)"
+# pretrained = True
+# train_batch_size, test_batch_size = 128, 128
+# n_epochs, learning_rate, momentum = 5, 0.02, 0.5
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.backends.cudnn.benchmark = True
