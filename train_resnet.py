@@ -80,6 +80,18 @@ test_misses = {}
 confusion_basic_mats = []
 confusion_norm_mats = []
 
+new_dir = 'Results/init_results_{}_lr={}_mom={}'.format(pt, learning_rate, momentum)
+os.mkdir(new_dir)
+os.chdir(new_dir)
+cm_basic = 'Confusion Matrices - Non-Normalized'
+cm_all = 'Confusion Matrices - Normalized on all'
+cm_true = 'Confusion Matrices - Normalized on True Values'
+cm_pred = 'Confusion Matrices - Normalized on Predictions'
+os.mkdir(cm_basic)
+os.mkdir(cm_all)
+os.mkdir(cm_true)
+os.mkdir(cm_pred)
+
 for e in range(1, n_epochs + 1):
     print('Epoch {}/{}'.format(e, n_epochs))
     print('Training...')
@@ -144,12 +156,21 @@ for e in range(1, n_epochs + 1):
 
         cmfig1 = plt.figure()
         pivot1, heatmap1 = create_confusion_matrix(test_labels, test_predictions, categories)
-        cmfig1.savefig('Results/init_results_{}_epoch_{}_lr={}_mom={}_confusion_matrix_basic.png'
-                       .format(pt, e, learning_rate, momentum))
+        cmfig1.savefig(os.path.join(cm_basic, 'CM_Epoch_{}_basic.png'.format(e)))
+        # cmfig1.savefig('CM_Epoch_{}_basic.png'.format(e))
         cmfig2 = plt.figure()
-        pivot2, heatmap2 = create_confusion_matrix(test_labels, test_predictions, categories, normalize=True)
-        cmfig2.savefig('Results/init_results_{}_epoch_{}_lr={}_mom={}_confusion_matrix_normalized.png'
-                       .format(pt, e, learning_rate, momentum))
+        pivot2, heatmap2 = create_confusion_matrix(test_labels, test_predictions, categories, normalize='all')
+        cmfig2.savefig(os.path.join(cm_all, 'CM_Epoch_{}_normalized_all.png'.format(e)))
+        # cmfig2.savefig('CM_Epoch_{}_normalized_all.png'.format(e))
+        cmfig3 = plt.figure()
+        pivot3, heatmap3 = create_confusion_matrix(test_labels, test_predictions, categories, normalize='True')
+        cmfig3.savefig(os.path.join(cm_true, 'CM_Epoch_{}_normalized_true.png'.format(e)))
+        # cmfig3.savefig('CM_Epoch_{}_normalized_true.png'.format(e))
+        cmfig4 = plt.figure()
+        pivot4, heatmap4 = create_confusion_matrix(test_labels, test_predictions, categories, normalize='Pred')
+        cmfig4.savefig(os.path.join(cm_pred, 'CM_Epoch_{}_normalized_prediction.png'.format(e)))
+        # cmfig4.savefig('CM_Epoch_{}_normalized_prediction.png'.format(e))
+
 
         test_losses.append(test_avg_loss)
         test_accuracy = float(test_corrects / len(test_dataset) * 100)
@@ -167,8 +188,7 @@ plt.legend(['Train Loss', 'Test Loss'], loc='upper right')
 plt.title('Training and Testing Losses')
 plt.xlabel('Number of training examples seen by model')
 plt.ylabel('Cross entropy loss')
-fig1.savefig('Results/init_results_{}_lr={}_mom={}_losses.png'
-             .format(pt, learning_rate, momentum))
+fig1.savefig('Losses.png')
 
 fig2 = plt.figure()  # Code assumes n_epochs > 1
 plt.plot(range(1, n_epochs+1), train_accs, color='blue')
@@ -179,8 +199,7 @@ plt.legend(['Train Accuracy', 'Test Accuracy'], loc='upper right')
 plt.title('Accuracy Across Each Epoch')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
-fig2.savefig('Results/init_results_{}_lr={}_mom={}_accuracy.png'
-             .format(pt, learning_rate, momentum))
+fig2.savefig('Accuracy.png')
 
 # Used in python console for analysis of missed predictions in final epoch
 miss_5 = []

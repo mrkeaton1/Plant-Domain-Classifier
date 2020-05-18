@@ -57,7 +57,7 @@ def elapsed_time(seconds, short=False):
         return e_time
 
 
-def create_confusion_matrix(y_true, y_pred, classes, normalize=False):
+def create_confusion_matrix(y_true, y_pred, classes, normalize=None):
     # Get data into confusion matrix (array)
     num_classes = len(classes)
     size = len(y_true)
@@ -66,6 +66,16 @@ def create_confusion_matrix(y_true, y_pred, classes, normalize=False):
     for i in range(size):
         conf_mat[y_true[i], y_pred[i]] += 1
 
+    # Normalization procedure
+    if normalize == 'all':
+        conf_mat = np.divide(conf_mat, size)
+    elif normalize == 'True':
+        true_sum = np.sum(conf_mat, axis=1)
+        cm_t = np.transpose(conf_mat)
+        conf_mat = np.transpose(np.divide(cm_t, true_sum))
+    elif normalize == 'Pred':
+        pred_sum = np.sum(conf_mat, axis=0)
+        conf_mat = np.divide(conf_mat, pred_sum)
     conf_frame = pd.DataFrame([], columns=cols)
     for i in range(num_classes):
         for j in range(num_classes):
@@ -76,7 +86,6 @@ def create_confusion_matrix(y_true, y_pred, classes, normalize=False):
     conf_pivot = conf_pivot.reindex(columns=classes)
 
     if normalize:
-        conf_pivot = conf_pivot / size * 100
-        return conf_pivot, sns.heatmap(conf_pivot, annot=True, cmap="BuGn", fmt='.2f', cbar=False)
+        return conf_pivot, sns.heatmap(conf_pivot, annot=True, cmap="BuGn", fmt='.3f', cbar=False)
     else:
         return conf_pivot, sns.heatmap(conf_pivot, annot=True, cmap="BuGn", fmt='g', cbar=False)
