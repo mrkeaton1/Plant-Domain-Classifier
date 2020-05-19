@@ -12,17 +12,18 @@ import os
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from torchvision.models.resnet import resnet18
+from torchvision.models.resnet import resnet18, resnet34
 from time import time
 import matplotlib.pyplot as plt
 
 data_dir = sys.argv[1]
-pretrained = bool(sys.argv[2])
-train_batch_size = int(sys.argv[3])
-test_batch_size = int(sys.argv[4])
-n_epochs = int(sys.argv[5])
-learning_rate = float(sys.argv[6])
-momentum = float(sys.argv[7])
+modelname = sys.argv[2]
+pretrained = bool(sys.argv[3])
+train_batch_size = int(sys.argv[4])
+test_batch_size = int(sys.argv[5])
+n_epochs = int(sys.argv[6])
+learning_rate = float(sys.argv[7])
+momentum = float(sys.argv[8])
 # data_dir = "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)"
 # pretrained = True
 # train_batch_size, test_batch_size = 128, 128
@@ -52,20 +53,49 @@ print('Number of leaves/branches/trees in testing set: {}/{}/{}'
       .format(test_dom_count[0], test_dom_count[1], test_dom_count[2]))
 print('Directory: {}'.format(data_dir))
 
-if pretrained:
-    print('Beginning with pretrained resnet-18 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
-          .format(n_epochs, learning_rate, momentum))
-    resnet18_base = resnet18(pretrained=True)
+if modelname == 'resnet-18':
+    if pretrained:
+        print('Beginning with pretrained resnet-18 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
+              .format(n_epochs, learning_rate, momentum))
+        model = resnet18(pretrained=True)
+    else:
+        print('Beginning with untrained resnet-18 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
+              .format(n_epochs, learning_rate, momentum))
+        model = resnet18(pretrained=False)
+    model.fc = torch.nn.Linear(512, get_labelspace_size())
+    model = torch.nn.DataParallel(model)
+    model.to(device)
+    loss_fn = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+elif modelname == 'resnet-34':
+    if pretrained:
+        print('Beginning with pretrained resnet-34 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
+              .format(n_epochs, learning_rate, momentum))
+        model = resnet34(pretrained=True)
+    else:
+        print('Beginning with untrained resnet-34 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
+              .format(n_epochs, learning_rate, momentum))
+        model = resnet34(pretrained=False)
+    model.fc = torch.nn.Linear(512, get_labelspace_size())
+    model = torch.nn.DataParallel(model)
+    model.to(device)
+    loss_fn = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 else:
-    print('Beginning with untrained resnet-18 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
-          .format(n_epochs, learning_rate, momentum))
-    resnet18_base = resnet18(pretrained=False)
-
-resnet18_base.fc = torch.nn.Linear(512, get_labelspace_size())
-resnet18_base = torch.nn.DataParallel(resnet18_base)
-resnet18_base.to(device)
-ce_loss = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(resnet18_base.parameters(), lr=learning_rate, momentum=momentum)
+    #  copied as placeholder - to be implemented
+    if pretrained:
+        print('Beginning with pretrained resnet-34 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
+              .format(n_epochs, learning_rate, momentum))
+        model = resnet34(pretrained=True)
+    else:
+        print('Beginning with untrained resnet-34 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
+              .format(n_epochs, learning_rate, momentum))
+        model = resnet34(pretrained=False)
+    model.fc = torch.nn.Linear(512, get_labelspace_size())
+    model = torch.nn.DataParallel(model)
+    model.to(device)
+    loss_fn = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 
 train_counter = []
 train_losses = []
@@ -80,7 +110,7 @@ test_misses = {}
 confusion_basic_mats = []
 confusion_norm_mats = []
 
-new_dir = 'Results/init_results_{}_lr={}_mom={}'.format(pt, learning_rate, momentum)
+new_dir = 'Results/{}_{}_epochs={}_lr={}_mom={}_batchsize={}-{}'.format(modelname, pt, n_epochs, learning_rate, momentum, train_batch_size, test_batch_size)
 os.mkdir(new_dir)
 os.chdir(new_dir)
 cm_basic = 'Confusion Matrices - Non-Normalized'
@@ -95,15 +125,15 @@ os.mkdir(cm_pred)
 for e in range(1, n_epochs + 1):
     print('Epoch {}/{}'.format(e, n_epochs))
     print('Training...')
-    resnet18_base.train()
+    model.train()
     start_train = time()
     train_corrects = 0
     for batch_idx, batch_info in enumerate(training_generator):
         batch_data, batch_labels = batch_info[0].to(device), batch_info[1].to(device)
         optimizer.zero_grad()
-        output = resnet18_base(batch_data)
+        output = model(batch_data)
         train_predictions = torch.argmax(output, 1)
-        loss = ce_loss(output, batch_labels)
+        loss = loss_fn(output, batch_labels)
         train_losses.append(loss.item())
         loss.backward()
         optimizer.step()
@@ -134,13 +164,13 @@ for e in range(1, n_epochs + 1):
     test_labels = []  # Used for confusion matrix
     test_predictions = []  # Used for confusion matrix
     start_test = time()
-    resnet18_base.eval()
+    model.eval()
     with torch.no_grad():
         for batch_idx, batch_info in enumerate(test_generator):
             batch_data, batch_labels = batch_info[0].to(device), batch_info[1].to(device)
-            output = resnet18_base(batch_data)
+            output = model(batch_data)
             batch_predictions = torch.argmax(output, 1)
-            loss = ce_loss(output, batch_labels)
+            loss = loss_fn(output, batch_labels)
             test_avg_loss += (loss.item() * len(batch_predictions) / len(test_dataset))
             for i in range(len(batch_predictions)):
                 test_corrects += (batch_predictions[i].item() == batch_labels[i].item())
@@ -170,6 +200,7 @@ for e in range(1, n_epochs + 1):
         pivot4, heatmap4 = create_confusion_matrix(test_labels, test_predictions, categories, normalize='Pred')
         cmfig4.savefig(os.path.join(cm_pred, 'CM_Epoch_{}_normalized_prediction.png'.format(e)))
         # cmfig4.savefig('CM_Epoch_{}_normalized_prediction.png'.format(e))
+        plt.close('all')
 
 
         test_losses.append(test_avg_loss)

@@ -4,7 +4,8 @@ do
 	do
 		for mom in 0.5 0.7 0.9 0.95
 		do
-			python3 train_resnet.py "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset" $pt 128 128 10 $lr $mom
+			python3 train_resnet.py "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)" resnet-18 $pt 128 128 10 $lr $mom
+			python3 train_resnet.py "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)" resnet-34 $pt 64 64 10 $lr $mom
 		done
 	done
 done

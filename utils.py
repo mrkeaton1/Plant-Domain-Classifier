@@ -86,6 +86,6 @@ def create_confusion_matrix(y_true, y_pred, classes, normalize=None):
     conf_pivot = conf_pivot.reindex(columns=classes)
 
     if normalize:
-        return conf_pivot, sns.heatmap(conf_pivot, annot=True, cmap="BuGn", fmt='.3f', cbar=False)
+        return conf_pivot, sns.heatmap(conf_pivot, annot=True, cmap="GnBu", fmt='.3f', cbar=False)
     else:
         return conf_pivot, sns.heatmap(conf_pivot, annot=True, cmap="BuGn", fmt='g', cbar=False)
