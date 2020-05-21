@@ -6,6 +6,8 @@ do
 		do
 			python3 train_resnet.py "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)" resnet-18 $pt 128 128 10 $lr $mom
 			python3 train_resnet.py "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)" resnet-34 $pt 64 64 10 $lr $mom
+			python3 train_resnet.py "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)" efficientnet-b0 $pt 32 32 10 $lr $mom
+			python3 train_resnet.py "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)" efficientnet-b7 $pt 4 4 10 $lr $mom
 		done
 	done
 done

@@ -3,16 +3,16 @@ Trains resnet-18 model on iNaturalist dataset domains
 Created by Matthew Keaton on 4/14/2020
 """
 
-from loaddataset import get_labelspace_size, DomainData, categories
+from loaddataset import DomainData, categories
 from utils import elapsed_time, create_confusion_matrix
 from preprocessing import base_transform
+from model_init import init_model
 import pickle
 import sys
 import os
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from torchvision.models.resnet import resnet18, resnet34
 from time import time
 import matplotlib.pyplot as plt
 
@@ -24,13 +24,6 @@ test_batch_size = int(sys.argv[5])
 n_epochs = int(sys.argv[6])
 learning_rate = float(sys.argv[7])
 momentum = float(sys.argv[8])
-# data_dir = "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)"
-# pretrained = True
-# train_batch_size, test_batch_size = 128, 128
-# n_epochs, learning_rate, momentum = 5, 0.02, 0.5
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-torch.backends.cudnn.benchmark = True
 
 pt = 'pretrained' if pretrained else 'untrained'
 partition = pickle.load(open(os.path.join(data_dir, 'partition_dict.p'), 'rb'))
@@ -53,49 +46,14 @@ print('Number of leaves/branches/trees in testing set: {}/{}/{}'
       .format(test_dom_count[0], test_dom_count[1], test_dom_count[2]))
 print('Directory: {}'.format(data_dir))
 
-if modelname == 'resnet-18':
-    if pretrained:
-        print('Beginning with pretrained resnet-18 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
-              .format(n_epochs, learning_rate, momentum))
-        model = resnet18(pretrained=True)
-    else:
-        print('Beginning with untrained resnet-18 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
-              .format(n_epochs, learning_rate, momentum))
-        model = resnet18(pretrained=False)
-    model.fc = torch.nn.Linear(512, get_labelspace_size())
-    model = torch.nn.DataParallel(model)
-    model.to(device)
-    loss_fn = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
-elif modelname == 'resnet-34':
-    if pretrained:
-        print('Beginning with pretrained resnet-34 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
-              .format(n_epochs, learning_rate, momentum))
-        model = resnet34(pretrained=True)
-    else:
-        print('Beginning with untrained resnet-34 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
-              .format(n_epochs, learning_rate, momentum))
-        model = resnet34(pretrained=False)
-    model.fc = torch.nn.Linear(512, get_labelspace_size())
-    model = torch.nn.DataParallel(model)
-    model.to(device)
-    loss_fn = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
-else:
-    #  copied as placeholder - to be implemented
-    if pretrained:
-        print('Beginning with pretrained resnet-34 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
-              .format(n_epochs, learning_rate, momentum))
-        model = resnet34(pretrained=True)
-    else:
-        print('Beginning with untrained resnet-34 architecture. Epochs = {}; Learning rate = {}; momentum = {}\n'
-              .format(n_epochs, learning_rate, momentum))
-        model = resnet34(pretrained=False)
-    model.fc = torch.nn.Linear(512, get_labelspace_size())
-    model = torch.nn.DataParallel(model)
-    model.to(device)
-    loss_fn = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+torch.backends.cudnn.benchmark = True
+
+# Model Selection and Initialization
+model = init_model(modelname, pretrained, n_epochs, learning_rate, momentum, device)
+loss_fn = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
 
 train_counter = []
 train_losses = []
@@ -187,19 +145,15 @@ for e in range(1, n_epochs + 1):
         cmfig1 = plt.figure()
         pivot1, heatmap1 = create_confusion_matrix(test_labels, test_predictions, categories)
         cmfig1.savefig(os.path.join(cm_basic, 'CM_Epoch_{}_basic.png'.format(e)))
-        # cmfig1.savefig('CM_Epoch_{}_basic.png'.format(e))
         cmfig2 = plt.figure()
         pivot2, heatmap2 = create_confusion_matrix(test_labels, test_predictions, categories, normalize='all')
         cmfig2.savefig(os.path.join(cm_all, 'CM_Epoch_{}_normalized_all.png'.format(e)))
-        # cmfig2.savefig('CM_Epoch_{}_normalized_all.png'.format(e))
         cmfig3 = plt.figure()
         pivot3, heatmap3 = create_confusion_matrix(test_labels, test_predictions, categories, normalize='True')
         cmfig3.savefig(os.path.join(cm_true, 'CM_Epoch_{}_normalized_true.png'.format(e)))
-        # cmfig3.savefig('CM_Epoch_{}_normalized_true.png'.format(e))
         cmfig4 = plt.figure()
         pivot4, heatmap4 = create_confusion_matrix(test_labels, test_predictions, categories, normalize='Pred')
         cmfig4.savefig(os.path.join(cm_pred, 'CM_Epoch_{}_normalized_prediction.png'.format(e)))
-        # cmfig4.savefig('CM_Epoch_{}_normalized_prediction.png'.format(e))
         plt.close('all')
 
 
