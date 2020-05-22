@@ -46,7 +46,6 @@ print('Number of leaves/branches/trees in testing set: {}/{}/{}'
       .format(test_dom_count[0], test_dom_count[1], test_dom_count[2]))
 print('Directory: {}'.format(data_dir))
 
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 torch.backends.cudnn.benchmark = True
 
@@ -166,6 +165,13 @@ for e in range(1, n_epochs + 1):
         print('Train/test time: {}'.format(elapsed_time(time() - start_train)))
     print('Total overall time: {}\n'.format(elapsed_time(time() - start_time)))
 
+top_acc = max(test_accs)
+top_ind = test_accs.index(top_acc) + 1
+with open("../top_accuracies.txt", "a") as t:
+    t.write('{}_{}_epochs={}_lr={}_mom={}_batchsize={}-{} - Top Accuracy: {}; Epoch Number: {}\n'
+            .format(modelname, pt, n_epochs, learning_rate, momentum,
+                    train_batch_size, test_batch_size, top_acc, top_ind))
+
 fig1 = plt.figure()
 plt.plot(train_counter, train_losses, color='blue')
 plt.scatter(test_counter, test_losses, color='red')
@@ -185,6 +191,8 @@ plt.title('Accuracy Across Each Epoch')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 fig2.savefig('Accuracy.png')
+fig2.savefig('../Accuracy/{}_{}_epochs={}_lr={}_mom={}_batchsize={}-{}.png'
+             .format(modelname, pt, n_epochs, learning_rate, momentum, train_batch_size, test_batch_size))
 
 # Used in python console for analysis of missed predictions in final epoch
 miss_5 = []
