@@ -71,7 +71,7 @@ new_dir = 'Results/{}_{}_epochs={}_lr={}_mom={}_batchsize={}-{}'.format(modelnam
 os.mkdir(new_dir)
 os.chdir(new_dir)
 cm_basic = 'Confusion Matrices - Non-Normalized'
-cm_all = 'Confusion Matrices - Normalized on all'
+cm_all = 'Confusion Matrices - Normalized on All'
 cm_true = 'Confusion Matrices - Normalized on True Values'
 cm_pred = 'Confusion Matrices - Normalized on Predictions'
 os.mkdir(cm_basic)
@@ -180,6 +180,8 @@ plt.title('Training and Testing Losses')
 plt.xlabel('Number of training examples seen by model')
 plt.ylabel('Cross entropy loss')
 fig1.savefig('Losses.png')
+fig1.savefig('../Losses/{}_{}_epochs={}_lr={}_mom={}_batchsize={}-{}.png'
+             .format(modelname, pt, n_epochs, learning_rate, momentum, train_batch_size, test_batch_size))
 
 fig2 = plt.figure()  # Code assumes n_epochs > 1
 plt.plot(range(1, n_epochs+1), train_accs, color='blue')

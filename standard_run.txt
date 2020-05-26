@@ -1,1 +1,1 @@
-python3 train_resnet.py "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)" efficientnet-b0 True 32 32 1 0.02 0.5
+python3 train_resnet.py "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)" fbnet_a True 128 128 1 0.02 0.5

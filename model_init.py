@@ -79,3 +79,4 @@ def init_model(m_name, p_trained, epochs, lr, mom, dev):
         model.head.conv = torch.nn.Conv2d(1984, get_labelspace_size(), kernel_size=(1, 1))
         model = torch.nn.DataParallel(model)
         model.to(dev)
+    return model
