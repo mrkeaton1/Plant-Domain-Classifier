@@ -58,8 +58,6 @@ def train_test(data_dir, modelname, pretrained, train_batch_size, test_batch_siz
     train_misses = {}
     test_misses = {}
 
-    os.mkdir('Accuracies')
-    os.mkdir('Losses')
     new_dir = '{}_{}_epochs={}_lr={}_mom={}_batchsize={}-{}'.format(modelname, pt, n_epochs, learning_rate, momentum, train_batch_size, test_batch_size)
     os.mkdir(new_dir)
     os.chdir(new_dir)
@@ -135,15 +133,19 @@ def train_test(data_dir, modelname, pretrained, train_batch_size, test_batch_siz
                 test_predictions += batch_predictions.tolist()
 
             cmfig1 = plt.figure()
+            plt.title('Confusion Matrix of Predicted vs. Ground Truth Labels')
             pivot1, heatmap1 = create_confusion_matrix(test_labels, test_predictions, categories)
             cmfig1.savefig(os.path.join(cm_basic, 'CM_Epoch_{}_basic.png'.format(e)))
             cmfig2 = plt.figure()
+            plt.title('Normalized Confusion Matrix')
             pivot2, heatmap2 = create_confusion_matrix(test_labels, test_predictions, categories, normalize='all')
             cmfig2.savefig(os.path.join(cm_all, 'CM_Epoch_{}_normalized_all.png'.format(e)))
             cmfig3 = plt.figure()
+            plt.title('Confusion Matrix Normalized Across True Labels')
             pivot3, heatmap3 = create_confusion_matrix(test_labels, test_predictions, categories, normalize='True')
             cmfig3.savefig(os.path.join(cm_true, 'CM_Epoch_{}_normalized_true.png'.format(e)))
             cmfig4 = plt.figure()
+            plt.title('Confusion Matrix Normalized Across Predicted Labels')
             pivot4, heatmap4 = create_confusion_matrix(test_labels, test_predictions, categories, normalize='Pred')
             cmfig4.savefig(os.path.join(cm_pred, 'CM_Epoch_{}_normalized_prediction.png'.format(e)))
             plt.close('all')
@@ -172,7 +174,7 @@ def train_test(data_dir, modelname, pretrained, train_batch_size, test_batch_siz
     plt.title('Training and Testing Losses')
     plt.xlabel('Number of training examples seen by model')
     plt.ylabel('Cross entropy loss')
-    fig1.savefig('Losses.png')
+    fig1.savefig('Loss.png')
     fig1.savefig('../Losses/{}_{}_epochs={}_lr={}_mom={}_batchsize={}-{}.png'
                  .format(modelname, pt, n_epochs, learning_rate, momentum, train_batch_size, test_batch_size))
 
@@ -188,6 +190,8 @@ def train_test(data_dir, modelname, pretrained, train_batch_size, test_batch_siz
     fig2.savefig('Accuracy.png')
     fig2.savefig('../Accuracies/{}_{}_epochs={}_lr={}_mom={}_batchsize={}-{}.png'
                  .format(modelname, pt, n_epochs, learning_rate, momentum, train_batch_size, test_batch_size))
+
+    os.chdir('..')
 
     # Used in python console for analysis of missed predictions in final epoch
     miss_5 = []
