@@ -1,5 +1,6 @@
 """
 Trains resnet-18 model on iNaturalist dataset domains
+
 Created by Matthew Keaton on 4/14/2020
 """
 
@@ -190,6 +191,8 @@ def train_test(data_dir, modelname, pretrained, train_batch_size, test_batch_siz
     fig2.savefig('Accuracy.png')
     fig2.savefig('../Accuracies/{}_{}_epochs={}_lr={}_mom={}_batchsize={}-{}.png'
                  .format(modelname, pt, n_epochs, learning_rate, momentum, train_batch_size, test_batch_size))
+
+    torch.save(model.state_dict(), '{}_model.pt'.format(modelname))
 
     os.chdir('..')
 
