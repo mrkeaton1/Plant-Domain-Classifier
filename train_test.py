@@ -10,7 +10,6 @@ from preprocessing import base_transform
 from model_init import init_model
 import pickle
 import os
-import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from time import time
@@ -24,13 +23,9 @@ def train_test(data_dir, modelname, pretrained, train_batch_size, test_batch_siz
     partition = pickle.load(open(os.path.join(data_dir, 'partition_dict.p'), 'rb'))
     labels = pickle.load(open(os.path.join(data_dir, 'label_list.p'), 'rb'))
 
-    print('Creating Domain Train Dataset')
     training_dataset = DomainData(partition['train'], labels, data_dir, transform=base_transform)
-    print('Creating training generator')
     training_generator = DataLoader(training_dataset, batch_size=train_batch_size, shuffle=True)
-    print('Creating Domain Test Dataset')
     test_dataset = DomainData(partition['test'], labels, data_dir, transform=base_transform)
-    print('Creating testing generator')
     test_generator = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=True)
 
     # Commented out because of massive slowdown
@@ -108,6 +103,7 @@ def train_test(data_dir, modelname, pretrained, train_batch_size, test_batch_siz
                         train_misses[im_id] = [e]
                     else:
                         train_misses[im_id].append(e)
+
         train_accuracy = float(train_corrects / len(training_dataset) * 100)
         train_accs.append(train_accuracy)
         print('Accuracy: {}/{} ({:.2f}%)   Time elapsed: {}'
@@ -200,13 +196,4 @@ def train_test(data_dir, modelname, pretrained, train_batch_size, test_batch_siz
                  .format(modelname, pt, n_epochs, learning_rate, momentum, train_batch_size, test_batch_size))
 
     torch.save(model.state_dict(), '{}_model.pt'.format(modelname))
-
     os.chdir('..')
-
-    # Used in python console for analysis of missed predictions in final epoch
-    miss_5 = []
-    for key in test_misses.keys():
-        temp = set(test_misses[key])
-        if n_epochs in temp:
-            miss_5.append(key)
-    miss_5.sort()

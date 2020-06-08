@@ -5,6 +5,8 @@ new_dir = input("Input new folder name\n>>> ")
 new_path = os.path.join('Results', new_dir)
 os.mkdir(new_path)
 os.chdir(new_path)
+os.mkdir('Accuracies')
+os.mkdir('Losses')
 
 for lr in (0.01, 0.025, 0.05):
     for mom in (0.1, 0.25, 0.5):
