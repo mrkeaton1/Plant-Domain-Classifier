@@ -40,6 +40,8 @@ class DomainData(Dataset):
     def __getitem__(self, index):
         data_id = self.list_ids[index]
         X = torch.load(os.path.join(self.data_dir, data_id))
+        if self.transform:
+            X = self.transform(X)
         y = self.labels[data_id]
         return X, y
 

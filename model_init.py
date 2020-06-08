@@ -4,7 +4,6 @@ from torchvision.models.resnet import resnet18, resnet34
 from efficientnet_pytorch import EfficientNet
 from mobile_cv.model_zoo.models.fbnet_v2 import fbnet
 
-
 def init_model(m_name, p_trained, epochs, lr, mom, dev):
 
     if m_name == 'resnet-18':

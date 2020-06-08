@@ -51,7 +51,8 @@ def generate_tensor_data(data_path, cd):
                             labels[data_id] = categories.index(domain)
 
                             image = Image.open(os.path.join(species_dir, domain, im))
-                            image = image.resize((224, 224))
+                            # Removed in order for augmentation to occur on entire image
+                            # image = image.resize((224, 224))
                             data = ToTensor()(image)
                             pt_filename = os.path.join(data_path, data_id)
                             torch.save(data, pt_filename)

@@ -24,22 +24,27 @@ def train_test(data_dir, modelname, pretrained, train_batch_size, test_batch_siz
     partition = pickle.load(open(os.path.join(data_dir, 'partition_dict.p'), 'rb'))
     labels = pickle.load(open(os.path.join(data_dir, 'label_list.p'), 'rb'))
 
+    print('Creating Domain Train Dataset')
     training_dataset = DomainData(partition['train'], labels, data_dir, transform=base_transform)
+    print('Creating training generator')
     training_generator = DataLoader(training_dataset, batch_size=train_batch_size, shuffle=True)
+    print('Creating Domain Test Dataset')
     test_dataset = DomainData(partition['test'], labels, data_dir, transform=base_transform)
+    print('Creating testing generator')
     test_generator = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=True)
 
-    train_dom_count = np.zeros(3, dtype='int')
-    for i in range(len(training_dataset)):
-        train_dom_count[training_dataset[i][1]] += 1
-    test_dom_count = np.zeros(3, dtype='int')
-    for i in range(len(test_dataset)):
-        test_dom_count[test_dataset[i][1]] += 1
-    print('Number of leaves/branches/trees in training set: {}/{}/{}'
-          .format(train_dom_count[0], train_dom_count[1], train_dom_count[2]))
-    print('Number of leaves/branches/trees in testing set: {}/{}/{}'
-          .format(test_dom_count[0], test_dom_count[1], test_dom_count[2]))
-    print('Directory: {}'.format(data_dir))
+    # Commented out because of massive slowdown
+    # train_dom_count = np.zeros(3, dtype='int')
+    # for i in range(len(training_dataset)):
+    #     train_dom_count[training_dataset[i][1]] += 1
+    # test_dom_count = np.zeros(3, dtype='int')
+    # for i in range(len(test_dataset)):
+    #     test_dom_count[test_dataset[i][1]] += 1
+    # print('Number of leaves/branches/trees in training set: {}/{}/{}'
+    #       .format(train_dom_count[0], train_dom_count[1], train_dom_count[2]))
+    # print('Number of leaves/branches/trees in testing set: {}/{}/{}'
+    #       .format(test_dom_count[0], test_dom_count[1], test_dom_count[2]))
+    # print('Directory: {}'.format(data_dir))
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     torch.backends.cudnn.benchmark = True
@@ -59,7 +64,8 @@ def train_test(data_dir, modelname, pretrained, train_batch_size, test_batch_siz
     train_misses = {}
     test_misses = {}
 
-    new_dir = '{}_{}_epochs={}_lr={}_mom={}_batchsize={}-{}'.format(modelname, pt, n_epochs, learning_rate, momentum, train_batch_size, test_batch_size)
+    new_dir = '{}_{}_epochs={}_lr={}_mom={}_batchsize={}-{}'.format(modelname, pt, n_epochs, learning_rate, momentum,
+                                                                    train_batch_size, test_batch_size)
     os.mkdir(new_dir)
     os.chdir(new_dir)
     cm_basic = 'Confusion Matrices - Non-Normalized'
@@ -78,6 +84,7 @@ def train_test(data_dir, modelname, pretrained, train_batch_size, test_batch_siz
         start_train = time()
         train_corrects = 0
         for batch_idx, batch_info in enumerate(training_generator):
+
             batch_data, batch_labels = batch_info[0].to(device), batch_info[1].to(device)
             optimizer.zero_grad()
             output = model(batch_data)
