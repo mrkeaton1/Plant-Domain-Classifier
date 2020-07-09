@@ -11,6 +11,7 @@ from loaddataset import DomainData
 import pickle
 import os
 from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
 
 
 class RandomCropToScale(object):
@@ -45,33 +46,55 @@ base_transform = torchvision.transforms.Compose([
 
 distillation_transform1 = torchvision.transforms.Compose([
                                 torchvision.transforms.ToPILImage(),
-                                torchvision.transforms.RandomCrop((112, 112)),
-                                torchvision.transforms.RandomHorizontalFlip(0.5),
+                                torchvision.transforms.RandomHorizontalFlip(1.0),
                                 torchvision.transforms.ToTensor()
                                 ])
 
-distillation_transform2 = torchvision.transforms.Compose([
-                                torchvision.transforms.ToPILImage(),
-                                torchvision.transforms.RandomCrop((112, 112)),
-                                torchvision.transforms.RandomHorizontalFlip(0.5),
-                                torchvision.transforms.ToTensor()
-                                ])
+distillation_transform2 = RandomCropToScale(0.8)
 
-distillation_transform3 = torchvision.transforms.Compose([
-                                torchvision.transforms.ToPILImage(),
-                                torchvision.transforms.RandomCrop((112, 112)),
-                                torchvision.transforms.RandomHorizontalFlip(0.5),
-                                torchvision.transforms.ToTensor()
-                                ])
+distillation_transform3 = RandomCropToScale(0.6)
 
 dist_transforms = [distillation_transform1, distillation_transform2, distillation_transform3]
 
 
 # if __name__ == '__main__':
 #
-#     data_dir = "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)"
-#     partition = pickle.load(open(os.path.join(data_dir, 'partition_dict.p'), 'rb'))
-#     labels = pickle.load(open(os.path.join(data_dir, 'label_list.p'), 'rb'))
-#     dataset = DomainData(partition['train'], labels, data_dir, transform=None)
-#     generator = DataLoader(dataset, batch_size=128, shuffle=True)
-
+# data_dir = "/home/mrkeaton/Documents/Datasets/Annotated iNaturalist Dataset - edited (new)"
+# partition = pickle.load(open(os.path.join(data_dir, 'partition_dict.p'), 'rb'))
+# labels = pickle.load(open(os.path.join(data_dir, 'label_list.p'), 'rb'))
+# dataset = DomainData(partition['train'], labels, data_dir, transform=None)
+# generator = DataLoader(dataset, batch_size=128, shuffle=True)
+# sample = dataset[1][0]
+# plt.figure()
+# sample = sample.transpose(0,2)
+# sample = sample.transpose(0,1)
+# plt.imshow(sample)
+# plt.show()
+#
+# dataset_t1 = DomainData(partition['train'], labels, data_dir, transform=base_transform)
+# sample_t1 = dataset_t1[1][0]
+# plt.figure()
+# sample_t1 = sample_t1.transpose(0,2).transpose(0,1)
+# plt.imshow(sample_t1)
+# plt.show()
+#
+# dataset_t2 = DomainData(partition['train'], labels, data_dir, transform=distillation_transform1)
+# sample_t2 = dataset_t2[1][0]
+# plt.figure()
+# sample_t2 = sample_t2.transpose(0,2).transpose(0,1)
+# plt.imshow(sample_t2)
+# plt.show()
+#
+# dataset_t3 = DomainData(partition['train'], labels, data_dir, transform=distillation_transform2)
+# sample_t3 = dataset_t3[1][0]
+# plt.figure()
+# sample_t3 = sample_t3.transpose(0,2).transpose(0,1)
+# plt.imshow(sample_t3)
+# plt.show()
+#
+# dataset_t4 = DomainData(partition['train'], labels, data_dir, transform=distillation_transform3)
+# sample_t4 = dataset_t4[1][0]
+# plt.figure()
+# sample_t4 = sample_t4.transpose(0,2).transpose(0,1)
+# plt.imshow(sample_t4)
+# plt.show()
